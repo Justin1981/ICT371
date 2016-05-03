@@ -13,9 +13,20 @@ public enum GPSstate
 
 public class GPSManager : MonoBehaviour 
 {
+    // public variables to set/get required values
+    public Text latitudeText;
+    public Text longitudeText;
+    public Text distanceText;
+    public Text bearingText;
+    public Text curHeadingText;
+    public Text directToTargetText;
+    public string targetLatitude;
+    public string targetLongitude;
+
     // Approximate radius of the earth (in kilometers)
     const float EARTH_RADIUS = 6371.0f;
 
+    // private member variables
     private GPSstate state;
     private float m_latitude;
     private float m_longitude;
@@ -25,12 +36,8 @@ public class GPSManager : MonoBehaviour
 
     private float m_distanceToTarget;
     private float m_bearing;
-
-    public Text latitudeText;
-    public Text longitudeText;
-    public Text distanceText;
-    public Text headingText;
-    public Text bearingText;
+    private float m_curHeading;
+    private string m_directToTarget;
     
 	// Use this for initialization
 	IEnumerator Start () 
@@ -39,9 +46,14 @@ public class GPSManager : MonoBehaviour
         m_latitude = 0.0f;
         m_longitude = 0.0f;
         m_distanceToTarget = 0.0f;
+        m_curHeading = 0.0f;
+        m_directToTarget = "";
 
-        m_targetLatitude = -32.291077f;
-        m_targetLongitude = 115.707880f;
+        //m_targetLatitude = -32.291077f;
+        //m_targetLongitude = 115.707880f;
+
+        m_targetLatitude = float.Parse(targetLatitude);
+        m_targetLongitude = float.Parse(targetLongitude);
 
         Debug.Log("GPSManager START called");
 
@@ -58,7 +70,7 @@ public class GPSManager : MonoBehaviour
                 yield return new WaitForSeconds(1);
                 waitTime--;
             }
-
+/*
             if (waitTime == 0)
             {
                 state = GPSstate.TimedOut;
@@ -70,11 +82,11 @@ public class GPSManager : MonoBehaviour
             else
             {
                 state = GPSstate.Enabled;
-                //m_latitude = Input.location.lastData.latitude;
-                //m_longitude = Input.location.lastData.longitude;
+                Input.compass.enabled = true;
                 UpdateLatLong();
             }
-
+ */
+            GPSstartHandler(waitTime);
         }
         Debug.Log("GPSManager GPS not enabled");
 	}
@@ -82,6 +94,11 @@ public class GPSManager : MonoBehaviour
 	// Update is called once per frame
 	void Update () 
     {
+        if (UpdateLatLong())
+        {
+            UpdateOutput();
+        }
+        /*
         switch(state)
         {
             case GPSstate.Enabled:
@@ -99,6 +116,7 @@ public class GPSManager : MonoBehaviour
                 break;
 
         }
+        */
 	}
 
     IEnumerator OnApplicationPause(bool pauseState)
@@ -119,7 +137,7 @@ public class GPSManager : MonoBehaviour
                 yield return new WaitForSeconds(1);
                 waitTime--;
             }
-
+/*
             if (waitTime == 0)
             {
                 state = GPSstate.TimedOut;
@@ -131,15 +149,18 @@ public class GPSManager : MonoBehaviour
             else
             {
                 state = GPSstate.Enabled;
-                //m_latitude = Input.location.lastData.latitude;
-                //m_longitude = Input.location.lastData.longitude;
+                Input.compass.enabled = true;
                 UpdateLatLong();
             }
-        }
+ */
+
+            GPSstartHandler(waitTime);
+         }
     }
 
-    IEnumerator GPSstartHandler()
+    void GPSstartHandler(int waitTime)
     {
+        /*
         Input.location.Start(1.0f, 1.0f);
 
         int waitTime = 20;
@@ -149,7 +170,7 @@ public class GPSManager : MonoBehaviour
             yield return new WaitForSeconds(1);
             waitTime--;
         }
-
+        */
         if (waitTime == 0)
         {
             state = GPSstate.TimedOut;
@@ -161,47 +182,60 @@ public class GPSManager : MonoBehaviour
         else
         {
             state = GPSstate.Enabled;
-            //m_latitude = Input.location.lastData.latitude;
-            //m_longitude = Input.location.lastData.longitude;
+            Input.compass.enabled = true;
             UpdateLatLong();
         }
     }
 
-    void UpdateLatLong()
+    void UpdateOutput()
+    {
+        latitudeText.text = "Latitude: " + m_latitude.ToString();
+        longitudeText.text = "Longitude: " + m_longitude.ToString();
+        distanceText.text = "Distance To Target: " + m_distanceToTarget.ToString();
+        bearingText.text = "Bearing To Target: " + m_bearing.ToString();
+        curHeadingText.text = "Cur Heading: " + m_curHeading.ToString();
+        directToTargetText.text = "Direction: " + m_directToTarget;
+    }
+
+    bool UpdateLatLong()
     {
         m_latitude = Input.location.lastData.latitude;
         m_longitude = Input.location.lastData.longitude;
-        latitudeText.text = "Latitude: " + m_latitude.ToString();
-        longitudeText.text = "Longitude: " + m_longitude.ToString();
+        //latitudeText.text = "Latitude: " + m_latitude.ToString();
+        //longitudeText.text = "Longitude: " + m_longitude.ToString();
 
         if (m_latitude != 0.0f && m_longitude != 0.0f)
         {
-            m_distanceToTarget = Haversine() * 1000.0f; ;
-            distanceText.text = "Distance To Target: " + m_distanceToTarget.ToString();
-
-            headingText.text = "Heading: " + Input.compass.trueHeading.ToString();
-
+            m_distanceToTarget = Haversine();
+            //distanceText.text = "Distance To Target: " + m_distanceToTarget.ToString();
+            
             m_bearing = Bearing();
-            bearingText.text = "Bearing To Target: " + m_bearing.ToString();
+            m_curHeading = Input.compass.trueHeading;
+            m_directToTarget = DirectToTarget();
+            //bearingText.text = "Bearing To Target: " + m_bearing.ToString();
+
+            //curHeadingText.text = "Cur Heading: " + Input.compass.trueHeading.ToString();
+
+           // directToTargetText.text = DirectToTarget();
+
+            return true;
         }
+        return false;
     }
 
-    float Bearing()
+    string DirectToTarget()
     {
-        float curLatRad = m_latitude * Mathf.Deg2Rad;
-        float curLongRad = m_longitude * Mathf.Deg2Rad;
+        float reqHeading = m_bearing - Input.compass.trueHeading;
+        string text = "";
 
-        float targLatRad = m_targetLatitude * Mathf.Deg2Rad;
-        float targLongRad = m_targetLongitude * Mathf.Deg2Rad;
+        if (reqHeading >= 10.0f)
+            text = "RIGHT ";
+        else if (reqHeading <= -10.0f)
+            text = "LEFT ";
+        else
+            text = "STRAIGHT";
 
-        float y = Mathf.Sin(targLongRad - curLongRad) * Mathf.Cos(targLatRad);
-        float x = Mathf.Cos(curLatRad) * Mathf.Sin(targLatRad) - Mathf.Sin(curLatRad) * Mathf.Cos(targLatRad) * Mathf.Cos(targLongRad - curLongRad);
-
-        float bearing = Mathf.Atan2(y, x) * Mathf.Rad2Deg;
-
-        bearing = (bearing + 360.0f) % 360.0f;
-
-        return bearing;
+        return text;
     }
 
     // The Haversine formula
@@ -220,7 +254,29 @@ public class GPSManager : MonoBehaviour
         //lastLatitude = newLatitude;
         //lastLongitude = newLongitude;
         float c = 2 * Mathf.Atan2(Mathf.Sqrt(a), Mathf.Sqrt(1 - a));
-        return EARTH_RADIUS * c;
+        return EARTH_RADIUS * c * 1000.0f;  // *1000 to convert from km to metres
+    }
+
+    // The Bearing formula
+    // Veness, C. (2014). Calculate distance, bearing and more between
+    //	Latitude/Longitude points. Movable Type Scripts. Retrieved from
+    //	http://www.movable-type.co.uk/scripts/latlong.html
+    float Bearing()
+    {
+        float curLatRad = m_latitude * Mathf.Deg2Rad;
+        float curLongRad = m_longitude * Mathf.Deg2Rad;
+
+        float targLatRad = m_targetLatitude * Mathf.Deg2Rad;
+        float targLongRad = m_targetLongitude * Mathf.Deg2Rad;
+
+        float y = Mathf.Sin(targLongRad - curLongRad) * Mathf.Cos(targLatRad);
+        float x = Mathf.Cos(curLatRad) * Mathf.Sin(targLatRad) - Mathf.Sin(curLatRad) * Mathf.Cos(targLatRad) * Mathf.Cos(targLongRad - curLongRad);
+
+        float bearing = Mathf.Atan2(y, x) * Mathf.Rad2Deg;
+
+        bearing = (bearing + 360.0f) % 360.0f;
+
+        return bearing;
     }
 
     // The Haversine formula
