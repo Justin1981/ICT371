@@ -3,8 +3,6 @@ using System.Collections;
 
 using System.Text;
 using System.IO;
-using System.Exception;
-using System;
 
 public class SceneDataLoader : MonoBehaviour 
 {
@@ -52,7 +50,7 @@ public class SceneDataLoader : MonoBehaviour
                         // deliniators, then send that array to DoStuff()
                         string[] entries = line.Split(',');
                         if (entries.Length > 0)
-                            DoStuff(entries);
+                            Debug.Log("Do Stuff");
                     }
                     else
                     {
