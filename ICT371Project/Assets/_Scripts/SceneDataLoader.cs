@@ -1,81 +1,208 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 using System.Text;
 using System.IO;
 
-public class SceneDataLoader : MonoBehaviour 
+using UnityEngine.UI;
+using UnityEngine.SceneManagement;
+
+//struct Question
+//{
+//    public string question;
+//    public int answer;
+//    public string option1;
+//    public string option2;
+//    public string option3;
+//    public string option4;
+
+//    public bool IsLoaded()
+//    {
+//        if (question.Length > 0 && answer != 99 && option1.Length > 0 &&
+//            option2.Length > 0 && option3.Length > 0 && option4.Length > 0)
+//        {
+//            return true;
+//        }
+//        else
+//        {
+//            return false;
+//        }
+//    }
+
+//    public void Clear()
+//    {
+//        question = option1 = option2 = option3 = option4 = "";
+//        answer = 99;
+//    }
+
+//    public void Print()
+//    {
+//        Debug.Log("question: " + question + " answer: " + answer + " opt1: " + option1 + " opt2: " + option2 +
+//            " opt3: " + option3 + " opt4: " + option4);
+//    }
+//}
+
+public class SceneDataLoader : MonoBehaviour
 {
-    public string sceneName;
 
 
-    private string m_sceneFile;
 
-	// Use this for initialization
-	void Start () 
+    public Text loadedText;
+
+    private string m_sceneName;
+    private string m_GPSfolder;
+    private string m_QnAfolder;
+    private string m_GPSfile;
+    private string m_QnAfile;
+
+    private List<Question> questions;
+
+    // Use this for initialization
+    void Start()
     {
-        m_sceneFile = sceneName+".txt";
-	}
-	
-	// Update is called once per frame
-	void Update () 
-    {
-	
-	}
+        m_GPSfolder = "Assets\\_Scenes\\_SceneData\\GPS\\";
+        m_QnAfolder = "Assets\\_Scenes\\_SceneData\\QnA\\";
 
-    bool LoadData()
-    {
-        int index = 1;
-        // Check File Exists
-        if (File.Exists(m_sceneFile))
+        GPSManager gps = GetComponent<GPSManager>();
+        m_sceneName = SceneManager.GetActiveScene().name;
+
+        m_GPSfile = m_sceneName + "_GPS";
+        m_QnAfile = m_sceneName + "_QnA";
+
+        questions = new List<Question>();
+
+       // if (LoadGPSdata() && LoadQnAdata())
+        if (LoadQnAdata())
         {
-            string line;
-            // Create a new StreamReader, tell it which file to read and what encoding the file
-            // was saved as
-            StreamReader theReader = new StreamReader(m_sceneFile, Encoding.Default);
-            // Immediately clean up the reader after this block of code is done.
-            // You generally use the "using" statement for potentially memory-intensive objects
-            // instead of relying on garbage collection.
-            using (theReader)
-            {
-                // While there's lines left in the text file, do this:
-                do
-                {
-                    line = theReader.ReadLine();
+            Debug.Log("Data files for " + m_sceneName + " loaded questions length: " +questions.Count.ToString());
 
-                    if (line != null)
-                    {
-                        // Do whatever you need to do with the text line, it's a string now
-                        // In this example, I split it into arguments based on comma
-                        // deliniators, then send that array to DoStuff()
-                        string[] entries = line.Split(',');
-                        if (entries.Length > 0)
-                            Debug.Log("Do Stuff");
-                    }
-                    else
-                    {
-                        Debug.Log("Error reading: " + m_sceneFile + " in line: " + index.ToString());
-                        return false;
-                    }
-                }
-                while (line != null);
-                // Done reading, close the reader and return true to broadcast success    
-                theReader.Close();
-                return true;
-            }
+            //foreach (Question q in questions)
+            //{
+            //    //gps.test += q.question + " " + q.answer + " " + q.option1 + " " + q.option2 + " " + q.option3 + " " + q.option4 + "\n";
+            //}
         }
+        //if (LoadGPSdata())
+        //    Debug.Log("Data files for " + m_sceneName + " loaded");
+        else
+            Debug.Log("START FAIL ERROR: Unable to Load " + m_sceneName + " data files");
+
+        Debug.Log("DialogueSceneData: " + DialogueSceneData.CurrentScene);
+        
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+
+    }
+
+
+
+    //bool LoadGPSdata()
+    //{
+    //    TextAsset file = Resources.Load(m_GPSfile) as TextAsset;
+    //    // Check File Exists
+    //    // if (File.Exists(m_GPSfile))
+    //    if (file != null)
+    //    {
+
+    //        string[] fullLines = file.text.Split(new char[] { '\n' });
+
+    //        if (fullLines[1].Length > 0 && !fullLines[1].Contains("//"))
+    //        {
+    //            string[] entries = fullLines[1].Split(',');
+
+    //            GPSManager gps = GetComponent<GPSManager>();
+    //            gps.targetLatitude = entries[0];
+    //            gps.targetLongitude = entries[1];
+    //            Debug.Log("LoadGPSdata: " + gps.targetLatitude + " " + gps.targetLongitude);
+    //            gps.test = m_GPSfile + entries[0] + " " + entries[1] + "\n";
+    //        }
+    //        return true;
+    //    }
+
+    //    else
+    //    {
+    //        Debug.Log("LoadData() Error File not Found: " + m_GPSfile);
+    //        GPSManager gps = GetComponent<GPSManager>();
+    //        gps.test = "FILE NOT FOUND";
+    //        gps.targetLatitude = "0.0";
+    //        gps.targetLongitude = "0.0";
+    //        return false;
+    //    }
+
+    //}
+
+
+    bool LoadQnAdata()
+    {
+        TextAsset file = Resources.Load(m_QnAfile) as TextAsset;
+        // Check File Exists
+        // if (File.Exists(m_GPSfile))
+
+        Question newQuestion = new Question();
+        newQuestion.Clear();
+
+        if (file != null)
+        {
+
+            string[] fullLines = file.text.Split(new char[] { '\n' });
+
+            for (int i = 0; i < fullLines.Length; i++)
+            {
+                if (fullLines[i].Length > 0 && !fullLines[i].Contains("//"))
+                {
+                   // Debug.Log("Full Line: " + fullLines[i]);
+                    string[] entries = fullLines[i].Split(':');
+                    //Debug.Log("entries[0]: " + entries[0] + " entries length: " + entries.Length.ToString());
+                    //Debug.Log("entries[1]: " + entries[1]);
+                    switch (entries[0])
+                    {
+                        case "Q":
+                            newQuestion.question = entries[1];
+                            break;
+
+                        case "A":
+                            newQuestion.answer = int.Parse(entries[1]);
+                            break;
+
+                        case "O1":
+                            newQuestion.option1 = entries[1];
+                            break;
+
+                        case "O2":
+                            newQuestion.option2 = entries[1];
+                            break;
+
+                        case "O3":
+                            newQuestion.option3 = entries[1];
+                            break;
+
+                        case "O4":
+                            newQuestion.option4 = entries[1];
+                            break;
+                    }
+
+                    newQuestion.Print();
+
+                    if (newQuestion.IsLoaded())
+                    {
+                        questions.Add(newQuestion);
+                        newQuestion.Clear();
+                    }
+
+                }
+            }
+            return true;
+        }
+
         else
         {
-            Debug.Log("Error Loading: " + m_sceneFile);
+            Debug.Log("LoadData() Error File not Found: " + m_QnAfile);
             return false;
         }
 
-        // If anything broke in the try block, we throw an exception with information
-        // on what didn't work
-        /*         catch (Exception e)
-                 {
-                     Debug.Log("{0}\n" + e.Message);
-                     return false;
-                 }*/
     }
 }
+

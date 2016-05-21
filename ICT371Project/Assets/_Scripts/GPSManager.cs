@@ -2,6 +2,7 @@
 using System.Collections;
 
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public enum GPSstate
 {
@@ -13,18 +14,9 @@ public enum GPSstate
 
 public class GPSManager : MonoBehaviour 
 {
-    // public variables to set/get required values
-    public Text latitudeText;
-    public Text longitudeText;
-    public Text distanceText;
-    public Text bearingText;
-    public Text curHeadingText;
-    public Text directToTargetText;
-    public string targetLatitude;
-    public string targetLongitude;
-
     // Approximate radius of the earth (in kilometers)
-    const float EARTH_RADIUS = 6371.0f;
+    private const float EARTH_RADIUS = 6371.0f;
+    private const int IN_RANGE_DISTANCE = 5;
 
     // private member variables
     private GPSstate state;
@@ -34,61 +26,48 @@ public class GPSManager : MonoBehaviour
     private float m_targetLatitude;
     private float m_targetLongitude;
 
-    private float m_distanceToTarget;
+    private int m_distanceToTarget;
     private float m_bearing;
     private float m_curHeading;
     private string m_directToTarget;
-    
+    private bool m_inRange;
+    private bool m_GPSonline;
+
+    //public Text testText;
+
 	// Use this for initialization
 	IEnumerator Start () 
     {
         state = GPSstate.Disabled;
         m_latitude = 0.0f;
         m_longitude = 0.0f;
-        m_distanceToTarget = 0.0f;
+        m_distanceToTarget = 0;
         m_curHeading = 0.0f;
         m_directToTarget = "";
-
-        //m_targetLatitude = -32.291077f;
-        //m_targetLongitude = 115.707880f;
-
-        m_targetLatitude = float.Parse(targetLatitude);
-        m_targetLongitude = float.Parse(targetLongitude);
-
+        m_inRange = false;
+        m_GPSonline = false;
+        
         Debug.Log("GPSManager START called");
 
-        if (Input.location.isEnabledByUser)
+        if (GPSLoadData())
         {
-            Debug.Log("GPSManager Input.location.isEnabledByUser");
-            Input.location.Start(1.0f, 1.0f);
-            
-            int waitTime = 20;
+            if (Input.location.isEnabledByUser)
+            {
+                Debug.Log("GPSManager Input.location.isEnabledByUser");
+                Input.location.Start(1.0f, 1.0f);
 
-            while (Input.location.status == LocationServiceStatus.Initializing && waitTime > 0)
-            {
-                Debug.Log("Initialising GPS: " + waitTime.ToString());
-                yield return new WaitForSeconds(1);
-                waitTime--;
+                int waitTime = 20;
+
+                while (Input.location.status == LocationServiceStatus.Initializing && waitTime > 0)
+                {
+                    Debug.Log("Initialising GPS: " + waitTime.ToString());
+                    yield return new WaitForSeconds(1);
+                    waitTime--;
+                }
+
+                GPSstartHandler(waitTime);
             }
-/*
-            if (waitTime == 0)
-            {
-                state = GPSstate.TimedOut;
-            }
-            else if (Input.location.status == LocationServiceStatus.Failed)
-            {
-                state = GPSstate.Failed;
-            }
-            else
-            {
-                state = GPSstate.Enabled;
-                Input.compass.enabled = true;
-                UpdateLatLong();
-            }
- */
-            GPSstartHandler(waitTime);
         }
-        Debug.Log("GPSManager GPS not enabled");
 	}
 	
 	// Update is called once per frame
@@ -96,34 +75,57 @@ public class GPSManager : MonoBehaviour
     {
         if (UpdateLatLong())
         {
-            UpdateOutput();
+            m_GPSonline = true;
         }
-        /*
-        switch(state)
+        else
         {
-            case GPSstate.Enabled:
-                UpdateLatLong();
-                break;
-
-            case GPSstate.Disabled:
-                longitudeText.text = "GPS Disabled";
-                latitudeText.text = "";
-                break;
-
-            default:
-                longitudeText.text = "AAAAHHHHHH";
-                latitudeText.text = "FFFFAAARRk";
-                break;
-
+            m_GPSonline = false;
         }
-        */
 	}
+
+    void OnDestroy()
+    {
+        Input.location.Stop();
+        Input.compass.enabled = false;
+    }
+
+    bool GPSLoadData()
+    {
+        string gpsFile = SceneManager.GetActiveScene().name + "_GPS";
+
+        TextAsset file = Resources.Load(gpsFile) as TextAsset;
+
+        if (file != null)
+        {
+            string[] fullLines = file.text.Split(new char[] { '\n' });
+
+            if (fullLines[1].Length > 0 && !fullLines[1].Contains("//"))
+            {
+                string[] entries = fullLines[1].Split(',');
+
+                m_targetLatitude = float.Parse(entries[0]);
+                m_targetLongitude = float.Parse(entries[1]);
+                Debug.Log("LoadGPSdata: " + m_targetLatitude.ToString() 
+                    + " " + m_targetLongitude.ToString());
+            }
+            return true;
+        }
+
+        else
+        {
+            Debug.Log("LoadData() Error File not Found: " + gpsFile);
+            m_targetLatitude = 0.0f;
+            m_targetLongitude = 0.0f;
+            return false;
+        }
+    }
 
     IEnumerator OnApplicationPause(bool pauseState)
     {
         if (pauseState)
         {
             Input.location.Stop();
+            Input.compass.enabled = false;
             state = GPSstate.Disabled;
         }
         else
@@ -137,22 +139,6 @@ public class GPSManager : MonoBehaviour
                 yield return new WaitForSeconds(1);
                 waitTime--;
             }
-/*
-            if (waitTime == 0)
-            {
-                state = GPSstate.TimedOut;
-            }
-            else if (Input.location.status == LocationServiceStatus.Failed)
-            {
-                state = GPSstate.Failed;
-            }
-            else
-            {
-                state = GPSstate.Enabled;
-                Input.compass.enabled = true;
-                UpdateLatLong();
-            }
- */
 
             GPSstartHandler(waitTime);
          }
@@ -160,17 +146,6 @@ public class GPSManager : MonoBehaviour
 
     void GPSstartHandler(int waitTime)
     {
-        /*
-        Input.location.Start(1.0f, 1.0f);
-
-        int waitTime = 20;
-
-        while (Input.location.status == LocationServiceStatus.Initializing && waitTime > 0)
-        {
-            yield return new WaitForSeconds(1);
-            waitTime--;
-        }
-        */
         if (waitTime == 0)
         {
             state = GPSstate.TimedOut;
@@ -187,55 +162,50 @@ public class GPSManager : MonoBehaviour
         }
     }
 
-    void UpdateOutput()
-    {
-        latitudeText.text = "Latitude: " + m_latitude.ToString();
-        longitudeText.text = "Longitude: " + m_longitude.ToString();
-        distanceText.text = "Distance To Target: " + m_distanceToTarget.ToString();
-        bearingText.text = "Bearing To Target: " + m_bearing.ToString();
-        curHeadingText.text = "Cur Heading: " + m_curHeading.ToString();
-        directToTargetText.text = "Direction: " + m_directToTarget;
-    }
-
     bool UpdateLatLong()
     {
         m_latitude = Input.location.lastData.latitude;
         m_longitude = Input.location.lastData.longitude;
-        //latitudeText.text = "Latitude: " + m_latitude.ToString();
-        //longitudeText.text = "Longitude: " + m_longitude.ToString();
 
-        if (m_latitude != 0.0f && m_longitude != 0.0f)
+        m_curHeading = Input.compass.trueHeading;
+
+        if (m_latitude != 0.0f && m_longitude != 0.0f && m_curHeading != 0.0f)
         {
-            m_distanceToTarget = Haversine();
-            //distanceText.text = "Distance To Target: " + m_distanceToTarget.ToString();
-            
-            m_bearing = Bearing();
-            m_curHeading = Input.compass.trueHeading;
-            m_directToTarget = DirectToTarget();
-            //bearingText.text = "Bearing To Target: " + m_bearing.ToString();
+            m_distanceToTarget = (int)Haversine();
 
-            //curHeadingText.text = "Cur Heading: " + Input.compass.trueHeading.ToString();
+            if (m_distanceToTarget <= IN_RANGE_DISTANCE)
+            {
+                m_inRange = true;
+            }
 
-           // directToTargetText.text = DirectToTarget();
+            m_bearing = CalcBearing();
+
+            m_directToTarget = CalcDirectToTarget();
 
             return true;
         }
         return false;
     }
 
-    string DirectToTarget()
+    string CalcDirectToTarget()
     {
         float reqHeading = m_bearing - Input.compass.trueHeading;
-        string text = "";
+        string direction = "";
 
         if (reqHeading >= 10.0f)
-            text = "RIGHT ";
+        {
+            direction = "RIGHT";
+        }
         else if (reqHeading <= -10.0f)
-            text = "LEFT ";
+        {
+            direction = "LEFT";
+        }
         else
-            text = "STRAIGHT";
+        {
+            direction = "STRAIGHT";
+        }
 
-        return text;
+        return direction;
     }
 
     // The Haversine formula
@@ -244,16 +214,15 @@ public class GPSManager : MonoBehaviour
     //	http://www.movable-type.co.uk/scripts/latlong.html
     float Haversine()
     {
-        //float newLatitude = Input.location.lastData.latitude;
-        //float newLongitude = Input.location.lastData.longitude;
         float deltaLatitude = (m_targetLatitude - m_latitude) * Mathf.Deg2Rad;
         float deltaLongitude = (m_targetLongitude - m_longitude) * Mathf.Deg2Rad;
+
         float a = Mathf.Pow(Mathf.Sin(deltaLatitude / 2), 2) +
             Mathf.Cos(m_latitude * Mathf.Deg2Rad) * Mathf.Cos(m_targetLatitude * Mathf.Deg2Rad) *
             Mathf.Pow(Mathf.Sin(deltaLongitude / 2), 2);
-        //lastLatitude = newLatitude;
-        //lastLongitude = newLongitude;
+
         float c = 2 * Mathf.Atan2(Mathf.Sqrt(a), Mathf.Sqrt(1 - a));
+
         return EARTH_RADIUS * c * 1000.0f;  // *1000 to convert from km to metres
     }
 
@@ -261,7 +230,7 @@ public class GPSManager : MonoBehaviour
     // Veness, C. (2014). Calculate distance, bearing and more between
     //	Latitude/Longitude points. Movable Type Scripts. Retrieved from
     //	http://www.movable-type.co.uk/scripts/latlong.html
-    float Bearing()
+    float CalcBearing()
     {
         float curLatRad = m_latitude * Mathf.Deg2Rad;
         float curLongRad = m_longitude * Mathf.Deg2Rad;
@@ -287,14 +256,100 @@ public class GPSManager : MonoBehaviour
     {
         float newLatitude = Input.location.lastData.latitude;
         float newLongitude = Input.location.lastData.longitude;
+
         float deltaLatitude = (newLatitude - lastLatitude) * Mathf.Deg2Rad;
         float deltaLongitude = (newLongitude - lastLongitude) * Mathf.Deg2Rad;
+
         float a = Mathf.Pow(Mathf.Sin(deltaLatitude / 2), 2) +
             Mathf.Cos(lastLatitude * Mathf.Deg2Rad) * Mathf.Cos(newLatitude * Mathf.Deg2Rad) *
             Mathf.Pow(Mathf.Sin(deltaLongitude / 2), 2);
+
         lastLatitude = newLatitude;
         lastLongitude = newLongitude;
+
         float c = 2 * Mathf.Atan2(Mathf.Sqrt(a), Mathf.Sqrt(1 - a));
+
         return EARTH_RADIUS * c;
     }
+
+    public float Latitude
+    {
+        get
+        {
+            return m_latitude;
+        }
+    }
+
+    public float Longitude
+    {
+        get
+        {
+            return m_longitude;
+        }
+    }
+
+    public float TargetLatitude
+    {
+        get
+        {
+            return m_targetLatitude;
+        }
+    }
+
+    public float TargetLongitude
+    {
+        get
+        {
+            return m_targetLongitude;
+        }
+    }
+
+    public int DistanceToTarget
+    {
+        get
+        {
+            return m_distanceToTarget;
+        }
+    }
+
+    public float Bearing
+    {
+        get
+        {
+            return m_bearing;
+        }
+    }
+
+    public float CurHeading
+    {
+        get
+        {
+            return m_curHeading;
+        }
+    }
+
+    public string DirectToTarget
+    {
+        get
+        {
+            return m_directToTarget;
+        }
+    }
+
+    public bool InRange
+    {
+        get
+        {
+            return m_inRange;
+        }
+    }
+
+    public bool GPSonline
+    {
+        get
+        {
+            return m_GPSonline;
+        }
+    }
+
 }

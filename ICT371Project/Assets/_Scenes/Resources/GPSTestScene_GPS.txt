@@ -1,0 +1,2 @@
+//FORMAT: Latitude,Longitude **NOTE: Use 1 set of co-ordinates only**
+-32.291077,115.707880

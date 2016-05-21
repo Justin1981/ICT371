@@ -1,0 +1,28 @@
+//FORMAT: 
+//Q: Put the question on this line
+//A: put a number relating to the correct answer on this line
+//O1: Put option 1 on this line
+//O2: Put option 2 on the line
+//O3: Put option 3 on this line
+//O4: put option 4 on this line
+//
+Q:How many faces does a cube have?
+A:6
+O1:2
+O2:3
+O3:4
+O4:6
+
+Q:How many sides does a square have?
+A:4
+O1:2
+O2:3
+O3:4
+O4:6
+
+Q:How many sides does a triangle have?
+A:3
+O1:2
+O2:3
+O3:4
+O4:6
