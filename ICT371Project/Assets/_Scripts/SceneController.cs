@@ -32,9 +32,9 @@ public class SceneController : MonoBehaviour
 
 
         SceneData.CurrentScene = SceneManager.GetActiveScene().name;
-        if(SceneData.CurrentWaypoint == 0)
-            SceneData.CurrentWaypoint = 1;
-        else
+        //if(SceneData.CurrentWaypoint == 0)
+        //    SceneData.CurrentWaypoint = 1;
+        //else
             SceneData.CurrentWaypoint++;
 
         m_gps = GetComponent<GPSManager>();

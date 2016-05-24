@@ -38,7 +38,6 @@ public class QuestionManager : MonoBehaviour
     // List of Questions
     private List<Question> m_questions;
     private List<int> m_questionOrder;
-    // Question Index
 
     //Load in the first question in awake?
     void Start()
@@ -59,12 +58,15 @@ public class QuestionManager : MonoBehaviour
         if (LoadQnAdata())
         {
             Debug.Log("QuestionManager: Questions loaded");
+            testText.text += "QuestionManager: Questions loaded";
             RandomiseQuestions();
             LoadQuestion();
         }
         else
         {
             Debug.Log("QuestionManager: LOADING FAILED");
+
+            testText.text += "QuestionManager: LOADING FAILED";
         }
     }
 
@@ -246,7 +248,7 @@ public class QuestionManager : MonoBehaviour
         //if (qNaFile == "ERROR")
             //qNaFile = "CockatooLCBirthScreen_QnA";
 
-        testText.text = qNaFile;
+        testText.text += qNaFile;
 
         Debug.Log("qNaFile: " + qNaFile);
 

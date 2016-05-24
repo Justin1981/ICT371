@@ -38,10 +38,7 @@ public static class SceneData
 
         get
         {
-            //if (m_currentWaypoint == 0)
-                //return 0;
-            //else
-                return m_currentWaypoint;
+            return m_currentWaypoint;
         }
     }
 
