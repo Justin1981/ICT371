@@ -49,8 +49,8 @@ public class GPSManager : MonoBehaviour
         
         Debug.Log("GPSManager START called");
 
-        if (GPSLoadData())
-        {
+        //if (GPSLoadData())
+        //{
             if (Input.location.isEnabledByUser)
             {
                 Debug.Log("GPSManager Input.location.isEnabledByUser");
@@ -67,7 +67,7 @@ public class GPSManager : MonoBehaviour
 
                 GPSstartHandler(waitTime);
             }
-        }
+        //}
 	}
 	
 	// Update is called once per frame
@@ -87,37 +87,6 @@ public class GPSManager : MonoBehaviour
     {
         Input.location.Stop();
         Input.compass.enabled = false;
-    }
-
-    bool GPSLoadData()
-    {
-        string gpsFile = SceneManager.GetActiveScene().name + "_GPS";
-
-        TextAsset file = Resources.Load(gpsFile) as TextAsset;
-
-        if (file != null)
-        {
-            string[] fullLines = file.text.Split(new char[] { '\n' });
-
-            if (fullLines[1].Length > 0 && !fullLines[1].Contains("//"))
-            {
-                string[] entries = fullLines[1].Split(',');
-
-                m_targetLatitude = float.Parse(entries[0]);
-                m_targetLongitude = float.Parse(entries[1]);
-                Debug.Log("LoadGPSdata: " + m_targetLatitude.ToString() 
-                    + " " + m_targetLongitude.ToString());
-            }
-            return true;
-        }
-
-        else
-        {
-            Debug.Log("LoadData() Error File not Found: " + gpsFile);
-            m_targetLatitude = 0.0f;
-            m_targetLongitude = 0.0f;
-            return false;
-        }
     }
 
     IEnumerator OnApplicationPause(bool pauseState)
@@ -270,6 +239,38 @@ public class GPSManager : MonoBehaviour
         float c = 2 * Mathf.Atan2(Mathf.Sqrt(a), Mathf.Sqrt(1 - a));
 
         return EARTH_RADIUS * c;
+    }
+
+    public bool LoadData()
+    {
+        string gpsFile = SceneData.CurrentScene + "_GPS" +
+            SceneData.CurrentWaypoint.ToString();
+
+        TextAsset file = Resources.Load(gpsFile) as TextAsset;
+
+        if (file != null)
+        {
+            string[] fullLines = file.text.Split(new char[] { '\n' });
+
+            if (fullLines[1].Length > 0 && !fullLines[1].Contains("//"))
+            {
+                string[] entries = fullLines[1].Split(',');
+
+                m_targetLatitude = float.Parse(entries[0]);
+                m_targetLongitude = float.Parse(entries[1]);
+                Debug.Log("LoadGPSdata: " + m_targetLatitude.ToString()
+                    + " " + m_targetLongitude.ToString());
+            }
+            return true;
+        }
+
+        else
+        {
+            Debug.Log("LoadData() Error File not Found: " + gpsFile);
+            m_targetLatitude = 0.0f;
+            m_targetLongitude = 0.0f;
+            return false;
+        }
     }
 
     public float Latitude

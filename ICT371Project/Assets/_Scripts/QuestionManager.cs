@@ -8,14 +8,9 @@ using System.IO;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
-public class QuestionManager : MonoBehaviour {
+public class QuestionManager : MonoBehaviour 
+{
 
-    public enum QuestionSet
-    {
-        CockatooLifeSpan,
-        CocaktooConservationI,
-        CockatooConservationII
-    }
 
     public Text question;
     public Button[] answers = new Button[4];
@@ -24,6 +19,8 @@ public class QuestionManager : MonoBehaviour {
     public Text percentDisplay;
     public GameObject rightAnswerSound;
     public GameObject wrongAnswerSound;
+    public GameObject endOfQuizCanvas;
+    public GameObject endOfLevelCanvas;
 
     public Text testText;
 
@@ -41,10 +38,14 @@ public class QuestionManager : MonoBehaviour {
     // List of Questions
     private List<Question> m_questions;
     private List<int> m_questionOrder;
+    // Question Index
 
     //Load in the first question in awake?
     void Start()
     {
+
+        endOfQuizCanvas.SetActive(false); 
+        endOfLevelCanvas.SetActive(false);
         questionsAnswered = 0;
         correctAnswers = 0;
         completed = false;
@@ -58,8 +59,8 @@ public class QuestionManager : MonoBehaviour {
         if (LoadQnAdata())
         {
             Debug.Log("QuestionManager: Questions loaded");
-            RandomiseAnswers();
-            loadQuestion();
+            RandomiseQuestions();
+            LoadQuestion();
         }
         else
         {
@@ -155,11 +156,15 @@ public class QuestionManager : MonoBehaviour {
         if (questionsAnswered != totalQuestions)
         {
             setComponents();
-            loadQuestion();
+            LoadQuestion();
         }
         else
         {
             //Finish and display next goal.
+            if(SceneData.CurrentWaypoint < SceneData.MAX_WAYPOINTS)
+                endOfQuizCanvas.SetActive(true);
+            else
+                endOfLevelCanvas.SetActive(true);
         }
     }
 
@@ -192,13 +197,13 @@ public class QuestionManager : MonoBehaviour {
         timer.value = 1;
     }
 
-    public void loadQuestion()
+    public void LoadQuestion()
     {
         completed = false;
         
         // Check the question order list. Reload if required
         if (m_questionOrder.Count == 0)
-            RandomiseAnswers();
+            RandomiseQuestions();
 
         // Get the random number question from question order, then remove from list
         Question newQuestion = m_questions[m_questionOrder[0]];
@@ -215,7 +220,7 @@ public class QuestionManager : MonoBehaviour {
         newQuestion.Print();
     }
 
-    void RandomiseAnswers()
+    public void RandomiseQuestions()
     {
         System.Random random = new System.Random();
         List<int> order = new List<int>();
@@ -236,7 +241,8 @@ public class QuestionManager : MonoBehaviour {
 
     bool LoadQnAdata()
     {
-        string qNaFile = DialogueSceneData.CurrentScene + "_QnA";
+        string qNaFile = SceneData.CurrentScene + "_QnA" +
+            SceneData.CurrentWaypoint.ToString();
         //if (qNaFile == "ERROR")
             //qNaFile = "CockatooLCBirthScreen_QnA";
 

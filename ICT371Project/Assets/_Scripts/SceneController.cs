@@ -12,23 +12,17 @@ public class SceneController : MonoBehaviour
     public GameObject imgTrgtBtn;
     public GameObject directionArrow;
 
-    // public variables to set/get required values
-    //public Text latitudeText;
-    //public Text longitudeText;
     public Text distanceText;
-    //public Text bearingText;
-    //public Text curHeadingText;
-    //public Text directToTargetText;
 
-    private GPSManager gps;
+    private GPSManager m_gps;
+    private QuestionManager m_questionManager;
     private string m_curDirection;
-
+    
     public Text testText;
 
     // Use this for initialization
     void Start()
     {
-        DialogueSceneData.CurrentScene = SceneManager.GetActiveScene().name;
         mapCanvas.SetActive(true);
         imgTrgtCanvas.SetActive(false);
         infoCanvas.SetActive(false);
@@ -36,7 +30,16 @@ public class SceneController : MonoBehaviour
         distanceText.text = "Please wait while the GPS finds your location";
         directionArrow.SetActive(false);
 
-        gps = GetComponent<GPSManager>();
+
+        SceneData.CurrentScene = SceneManager.GetActiveScene().name;
+        if(SceneData.CurrentWaypoint == 0)
+            SceneData.CurrentWaypoint = 1;
+        else
+            SceneData.CurrentWaypoint++;
+
+        m_gps = GetComponent<GPSManager>();
+        if (!m_gps.LoadData())
+            Debug.Log("Error Loading GPS file");
     }
 
     // Update is called once per frame
@@ -45,13 +48,13 @@ public class SceneController : MonoBehaviour
         directionArrow.SetActive(true);
         UpdateColour();
 
-        if (gps.GPSonline)
+        if (m_gps.GPSonline)
         {
             UpdateOutput();
             DirectToTarget();
             UpdateColour();
 
-            if (gps.InRange && distanceText.enabled)
+            if (m_gps.InRange && distanceText.enabled)
             {
                 directionArrow.SetActive(false);
                 distanceText.enabled = false;
@@ -59,14 +62,14 @@ public class SceneController : MonoBehaviour
                 imgTrgtCanvas.SetActive(true);
                 imgTrgtBtn.SetActive(true);
             }
-            else if (!gps.InRange && !distanceText.enabled)
+            else if (!m_gps.InRange && !distanceText.enabled)
             {
                 directionArrow.SetActive(true);
                 distanceText.enabled = true;
                 imgTrgtCanvas.SetActive(false);
                 mapCanvas.SetActive(true);
             }
-            else if (!gps.InRange && !directionArrow.activeSelf)
+            else if (!m_gps.InRange && !directionArrow.activeSelf)
             {
                 directionArrow.SetActive(true);
             }
@@ -77,7 +80,7 @@ public class SceneController : MonoBehaviour
     {
         //latitudeText.text = "Latitude: " + gps.Latitude.ToString();
         //longitudeText.text = "Longitude: " + gps.Longitude.ToString();
-        distanceText.text = gps.DistanceToTarget.ToString() + "m";
+        distanceText.text = m_gps.DistanceToTarget.ToString() + "m";
         //bearingText.text = "Bearing To Target: " + gps.Bearing.ToString();
         //curHeadingText.text = "Cur Heading: " + gps.CurHeading.ToString();
         //directToTargetText.text = "Direction: " + gps.DirectToTarget;
@@ -85,9 +88,9 @@ public class SceneController : MonoBehaviour
 
     void DirectToTarget()
     {
-        string direction = gps.DirectToTarget;
-        float forward = gps.Bearing;
-        float current = gps.CurHeading;
+        string direction = m_gps.DirectToTarget;
+        float forward = m_gps.Bearing;
+        float current = m_gps.CurHeading;
 
 
         float newDirection = forward - current;
@@ -107,7 +110,7 @@ public class SceneController : MonoBehaviour
 
     void UpdateColour()
     {
-        float mixAmount = 1-(gps.DistanceToTarget - 10)/(float)(200 - 10);
+        float mixAmount = 1-(m_gps.DistanceToTarget - 10)/(float)(200 - 10);
 
         Color redColour = Color.red;
 
