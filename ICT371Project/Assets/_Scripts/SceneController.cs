@@ -45,8 +45,8 @@ public class SceneController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        directionArrow.SetActive(true);
-        UpdateColour();
+        //directionArrow.SetActive(true);
+        //UpdateColour();
 
         if (m_gps.GPSonline)
         {

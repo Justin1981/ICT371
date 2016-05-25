@@ -18,6 +18,9 @@ public static class SceneData
     private static int m_questionsTotal;
     private static int m_questionsCorrect;
 
+    // Store Username
+    private static string m_userName;
+
     public static string CurrentScene
     {
         set
@@ -98,6 +101,21 @@ public static class SceneData
         get
         {
             return m_questionsCorrect;
+        }
+    }
+
+    public static string UserName
+    {
+        set
+        {
+            m_userName = value;
+        }
+        get
+        {
+            if (m_userName == null)
+                return "ERROR";
+            else
+                return m_userName;
         }
     }
 }

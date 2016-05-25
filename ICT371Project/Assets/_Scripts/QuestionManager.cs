@@ -10,8 +10,6 @@ using UnityEngine.SceneManagement;
 
 public class QuestionManager : MonoBehaviour 
 {
-
-
     public Text question;
     public Button[] answers = new Button[4];
     public int correctAnswer;
@@ -42,6 +40,7 @@ public class QuestionManager : MonoBehaviour
     //Load in the first question in awake?
     void Start()
     {
+        SceneData.UserName = "Justin"; ///////////TEMP TESTING. Must be updated once Login system setup
 
         endOfQuizCanvas.SetActive(false); 
         endOfLevelCanvas.SetActive(false);
@@ -58,15 +57,12 @@ public class QuestionManager : MonoBehaviour
         if (LoadQnAdata())
         {
             Debug.Log("QuestionManager: Questions loaded");
-            testText.text += "QuestionManager: Questions loaded";
             RandomiseQuestions();
             LoadQuestion();
         }
         else
         {
             Debug.Log("QuestionManager: LOADING FAILED");
-
-            testText.text += "QuestionManager: LOADING FAILED";
         }
     }
 
@@ -162,14 +158,15 @@ public class QuestionManager : MonoBehaviour
         }
         else
         {
+            SceneData.QuestionsTotal += questionsAnswered;
+            SceneData.QuestionsCorrect += correctAnswers;
+
             //Finish and display next goal. Set Answer details for reporting
             if (SceneData.CurrentWaypoint < SceneData.MAX_WAYPOINTS)
                 endOfQuizCanvas.SetActive(true);
             else
                 endOfLevelCanvas.SetActive(true);
             
-            SceneData.QuestionsTotal += questionsAnswered;
-            SceneData.QuestionsCorrect += correctAnswers;
         }
     }
 
@@ -322,5 +319,18 @@ public class QuestionManager : MonoBehaviour
             return false;
         }
 
+    }
+
+    void SaveStats()
+    {
+        float percentage = SceneData.QuestionsCorrect /
+                (float)SceneData.QuestionsTotal * 100.0f;
+
+        string file = Application.persistentDataPath 
+            + "/StatsData_" +  SceneData.UserName + ".txt";
+
+        string text = SceneData.SelectedAnimal + "," + SceneData.SelectedLevel
+            + "," + percentage.ToString() + "%";
+        File.AppendAllText(file, text);
     }
 }
