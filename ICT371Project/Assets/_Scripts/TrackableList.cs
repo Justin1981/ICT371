@@ -17,9 +17,6 @@ public class TrackableList : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        //GameObject go = GameObject.Find("Cube");
-        //rs = go.GetComponent<RotateTouchScript>();
-
         objects = GameObject.FindGameObjectsWithTag("Shape");
     }
 
@@ -71,11 +68,6 @@ public class TrackableList : MonoBehaviour
                 }
             }
         }
- 
-        //Debug.Log ("Found " + numFrameMarkers + " frame markers in curent frame");
-        //Debug.Log ("Found " + numImageTargets + " image targets in curent frame");
-        //Debug.Log ("Found " + numMultiTargets + " multi-targets in curent frame");
-        //Debug.Log ("Found " + numObjectTargets + " object-targets in current frame");
     }
 
 }

@@ -5,13 +5,13 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
 /// <summary>
-/// Script to load a new scene asynchronously with a loding screen
+/// Script to load a new scene asynchronously with a loading screen
 /// Loading progress updates the loading bar status on the loading screen
 /// </summary>
 public class ClickToLoadAsync : MonoBehaviour {
 
-    public Slider loadingBar;
-    public GameObject loadingImage;
+    public Slider loadingBar; // loading progress
+    public GameObject loadingImage; // loading image
 
     private AsyncOperation async;
 
@@ -24,7 +24,6 @@ public class ClickToLoadAsync : MonoBehaviour {
 
     IEnumerator LoadLevelWithBar (int level)
     {
-        //async = Application.LoadLevelAsync(level);
         async = SceneManager.LoadSceneAsync(level);
 
         while(!async.isDone)

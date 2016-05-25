@@ -1,4 +1,4 @@
 sceneSetups:
-- path: Assets/_Scenes/ReportScreen.unity
+- path: Assets/_Scenes/CockatooLCBirthScreen.unity
   isLoaded: 1
   isActive: 1

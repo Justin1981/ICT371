@@ -17,7 +17,6 @@ public class RotateTouchScript : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        //infoCanvas = infoCanvas.GetComponent<Canvas>();
         Visible = false;
     }
 
@@ -28,23 +27,11 @@ public class RotateTouchScript : MonoBehaviour
         {
             foreach (Touch touch in Input.touches)
             {
-                //Debug.Log("Touching at: " + touch.position);
-
-                //if (touch.phase == TouchPhase.Began)
-                //{
-                //    Debug.Log("Touch phase began at: " + touch.position);
-                //}
-                //else
                 if (touch.phase == TouchPhase.Moved)
                 {
-                    ///Debug.Log("Touch phase Moved");
                     transform.Rotate(touch.deltaPosition.x * rotationRate,
                                         -touch.deltaPosition.y * rotationRate, 0, Space.World);
                 }
-                //else if (touch.phase == TouchPhase.Ended)
-                //{
-                //    Debug.Log("Touch phase ended");
-                //}
             }
         }
     }

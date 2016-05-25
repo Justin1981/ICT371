@@ -1,27 +1,32 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-
 using UnityEngine.UI;
 
+/// <summary>
+/// Set static values for reporting
+/// </summary>
 public class SetReportData : MonoBehaviour
 {
 
     // Use this for initialization
     void Start()
     {
-        SceneData.CurrentWaypoint = 0;
-        SceneData.QuestionsCorrect = 0;
-        SceneData.QuestionsTotal = 0;
+        // initialise values
+        DialogueSceneData.CurrentWaypoint = 0;
+        DialogueSceneData.QuestionsCorrect = 0;
+        DialogueSceneData.QuestionsTotal = 0;
     }
     
+    // set selected animal
     public void SetCurrentAnimal(Button button)
     {
-        SceneData.SelectedAnimal = button.GetComponentInChildren<Text>().text;
+        DialogueSceneData.SelectedAnimal = button.GetComponentInChildren<Text>().text;
     }
 
+    // set selected stage
     public void SetCurrentStage(Button button)
     {
-        SceneData.SelectedLevel = button.GetComponentInChildren<Text>().text;
+        DialogueSceneData.SelectedLevel = button.GetComponentInChildren<Text>().text;
     }
 }

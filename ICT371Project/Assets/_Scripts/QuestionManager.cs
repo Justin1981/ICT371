@@ -8,8 +8,14 @@ using System.IO;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
+/// <summary>
+/// class to load and handle the questions being asked
+/// monitors current questions and writes results to file as required
+/// for users
+/// </summary>
 public class QuestionManager : MonoBehaviour 
 {
+    // public variables
     public Text question;
     public Button[] answers = new Button[4];
     public int correctAnswer;
@@ -40,8 +46,7 @@ public class QuestionManager : MonoBehaviour
     //Load in the first question in awake?
     void Start()
     {
-        SceneData.UserName = "Justin"; ///////////TEMP TESTING. Must be updated once Login system setup
-
+        // set initial values
         endOfQuizCanvas.SetActive(false); 
         endOfLevelCanvas.SetActive(false);
         questionsAnswered = 0;
@@ -158,11 +163,12 @@ public class QuestionManager : MonoBehaviour
         }
         else
         {
-            SceneData.QuestionsTotal += questionsAnswered;
-            SceneData.QuestionsCorrect += correctAnswers;
+            DialogueSceneData.QuestionsTotal += questionsAnswered;
+            DialogueSceneData.QuestionsCorrect += correctAnswers;
+            SaveStats();
 
             //Finish and display next goal. Set Answer details for reporting
-            if (SceneData.CurrentWaypoint < SceneData.MAX_WAYPOINTS)
+            if (DialogueSceneData.CurrentWaypoint < DialogueSceneData.MAX_WAYPOINTS)
                 endOfQuizCanvas.SetActive(true);
             else
                 endOfLevelCanvas.SetActive(true);
@@ -199,6 +205,7 @@ public class QuestionManager : MonoBehaviour
         timer.value = 1;
     }
 
+    // load questions from file
     public void LoadQuestion()
     {
         completed = false;
@@ -212,16 +219,17 @@ public class QuestionManager : MonoBehaviour
         m_questionOrder.RemoveAt(0);
 
         question.GetComponent<Text>().text = newQuestion.question;
-        answers[0].GetComponentInChildren<Text>().text = newQuestion.option1;// newAnswers[0];
-        answers[1].GetComponentInChildren<Text>().text = newQuestion.option2;// newAnswers[1];
-        answers[2].GetComponentInChildren<Text>().text = newQuestion.option3;// newAnswers[2];
-        answers[3].GetComponentInChildren<Text>().text = newQuestion.option4;// newAnswers[3];
+        answers[0].GetComponentInChildren<Text>().text = newQuestion.option1;
+        answers[1].GetComponentInChildren<Text>().text = newQuestion.option2;
+        answers[2].GetComponentInChildren<Text>().text = newQuestion.option3;
+        answers[3].GetComponentInChildren<Text>().text = newQuestion.option4;
         correctAnswer = newQuestion.answer;
 
         // Debug
         newQuestion.Print();
     }
 
+    // randomise questions in list
     public void RandomiseQuestions()
     {
         System.Random random = new System.Random();
@@ -241,37 +249,33 @@ public class QuestionManager : MonoBehaviour
         }
     }
 
+    // load question file
     bool LoadQnAdata()
     {
-        string qNaFile = SceneData.CurrentScene + "_QnA" +
-            SceneData.CurrentWaypoint.ToString();
-        //if (qNaFile == "ERROR")
-            //qNaFile = "CockatooLCBirthScreen_QnA";
+        string qNaFile = DialogueSceneData.CurrentScene + "_QnA" +
+            DialogueSceneData.CurrentWaypoint.ToString();
 
         testText.text = qNaFile;
 
         Debug.Log("qNaFile: " + qNaFile);
 
-        TextAsset file = Resources.Load(qNaFile) as TextAsset;
-        // Check File Exists
-        // if (File.Exists(m_GPSfile))
+        TextAsset file = Resources.Load(qNaFile) as TextAsset; // load file
 
         Question newQuestion = new Question();
         newQuestion.Clear();
 
+        // load string into questions
         if (file != null)
         {
-
+            // split by end of line
             string[] fullLines = file.text.Split(new char[] { '\n' });
-
+            // iterate over array and split into questions
             for (int i = 0; i < fullLines.Length; i++)
             {
                 if (fullLines[i].Length > 0 && !fullLines[i].Contains("//"))
                 {
-                    // Debug.Log("Full Line: " + fullLines[i]);
                     string[] entries = fullLines[i].Split(':');
-                    //Debug.Log("entries[0]: " + entries[0] + " entries length: " + entries.Length.ToString());
-                    //Debug.Log("entries[1]: " + entries[1]);
+
                     switch (entries[0])
                     {
                         case "Q":
@@ -298,9 +302,7 @@ public class QuestionManager : MonoBehaviour
                             newQuestion.option4 = entries[1];
                             break;
                     }
-
-                    //newQuestion.Print();
-
+                    // if question finished store to list
                     if (newQuestion.IsLoaded())
                     {
                         newQuestion.Print();
@@ -321,16 +323,18 @@ public class QuestionManager : MonoBehaviour
 
     }
 
+    // write quizz stats to file
     void SaveStats()
     {
-        float percentage = SceneData.QuestionsCorrect /
-                (float)SceneData.QuestionsTotal * 100.0f;
-
-        string file = Application.persistentDataPath 
-            + "/StatsData_" +  SceneData.UserName + ".txt";
-
-        string text = SceneData.SelectedAnimal + "," + SceneData.SelectedLevel
-            + "," + percentage.ToString() + "%";
-        File.AppendAllText(file, text);
+        // calc percentage value
+        float percentage = DialogueSceneData.QuestionsCorrect /
+                (float)DialogueSceneData.QuestionsTotal * 100.0f;
+        // get time stamp
+        string timeStamp = System.DateTime.Now.ToString("dd/MM/yyyy hh:mm");
+        // create report string
+        string text = timeStamp + " - " + DialogueSceneData.SelectedAnimal + " - " 
+                + DialogueSceneData.SelectedLevel + " - " + percentage.ToString() + "%\n\n";
+        // append to file
+        File.AppendAllText(DialogueSceneData.StatsFilePath, text);
     }
 }

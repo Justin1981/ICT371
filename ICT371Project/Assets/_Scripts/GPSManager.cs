@@ -12,10 +12,14 @@ public enum GPSstate
     Enabled
 }
 
+/// <summary>
+/// Script to manage GPS status and associated values and calculations
+/// </summary>
 public class GPSManager : MonoBehaviour 
 {
     // Approximate radius of the earth (in kilometers)
     private const float EARTH_RADIUS = 6371.0f;
+    // in range constant to identify when user is within range
     private const int IN_RANGE_DISTANCE = 5;
 
     // private member variables
@@ -32,12 +36,11 @@ public class GPSManager : MonoBehaviour
     private string m_directToTarget;
     private bool m_inRange;
     private bool m_GPSonline;
-
-    //public Text testText;
-
+    
 	// Use this for initialization
 	IEnumerator Start () 
     {
+        // set meber variables
         state = GPSstate.Disabled;
         m_latitude = 0.0f;
         m_longitude = 0.0f;
@@ -49,31 +52,28 @@ public class GPSManager : MonoBehaviour
         
         Debug.Log("GPSManager START called");
 
-        //if (GPSLoadData())
-        //{
-            if (Input.location.isEnabledByUser)
+        if (Input.location.isEnabledByUser)
+        {
+            Debug.Log("GPSManager Input.location.isEnabledByUser");
+            Input.location.Start(1.0f, 1.0f);
+
+            int waitTime = 20;
+
+            while (Input.location.status == LocationServiceStatus.Initializing && waitTime > 0)
             {
-                Debug.Log("GPSManager Input.location.isEnabledByUser");
-                Input.location.Start(1.0f, 1.0f);
-
-                int waitTime = 20;
-
-                while (Input.location.status == LocationServiceStatus.Initializing && waitTime > 0)
-                {
-                    Debug.Log("Initialising GPS: " + waitTime.ToString());
-                    yield return new WaitForSeconds(1);
-                    waitTime--;
-                }
-
-                GPSstartHandler(waitTime);
+                Debug.Log("Initialising GPS: " + waitTime.ToString());
+                yield return new WaitForSeconds(1);
+                waitTime--;
             }
-        //}
+
+            GPSstartHandler(waitTime);
+        }
 	}
 	
 	// Update is called once per frame
 	void Update () 
     {
-        if (UpdateLatLong())
+        if (UpdateLatLong()) // if GPS active and values loaded sset online
         {
             m_GPSonline = true;
         }
@@ -83,12 +83,14 @@ public class GPSManager : MonoBehaviour
         }
 	}
 
+    // shutdown operations
     void OnDestroy()
     {
         Input.location.Stop();
         Input.compass.enabled = false;
     }
 
+    // methid to handle app pausing on android
     IEnumerator OnApplicationPause(bool pauseState)
     {
         if (pauseState)
@@ -113,6 +115,7 @@ public class GPSManager : MonoBehaviour
          }
     }
 
+    // repeated GPS start handler operation
     void GPSstartHandler(int waitTime)
     {
         if (waitTime == 0)
@@ -131,18 +134,19 @@ public class GPSManager : MonoBehaviour
         }
     }
 
+    // update member values according the GPS position and target values
     bool UpdateLatLong()
     {
         m_latitude = Input.location.lastData.latitude;
         m_longitude = Input.location.lastData.longitude;
 
-        m_curHeading = Input.compass.trueHeading;
+        m_curHeading = Input.compass.trueHeading; // get current heading
 
-        if (m_latitude != 0.0f && m_longitude != 0.0f && m_curHeading != 0.0f)
+        if (m_latitude != 0.0f && m_longitude != 0.0f && m_curHeading != 0.0f) // if values set
         {
-            m_distanceToTarget = (int)Haversine();
+            m_distanceToTarget = (int)Haversine(); // cast to in for whole values
 
-            if (m_distanceToTarget <= IN_RANGE_DISTANCE)
+            if (m_distanceToTarget <= IN_RANGE_DISTANCE) // set in range
             {
                 m_inRange = true;
             }
@@ -153,9 +157,10 @@ public class GPSManager : MonoBehaviour
 
             return true;
         }
-        return false;
+        return false; // return false if values not set
     }
 
+    // calculate direction to target
     string CalcDirectToTarget()
     {
         float reqHeading = m_bearing - Input.compass.trueHeading;
@@ -241,15 +246,17 @@ public class GPSManager : MonoBehaviour
         return EARTH_RADIUS * c;
     }
 
+    // load data for GPS targets
     public bool LoadData()
     {
-        string gpsFile = SceneData.CurrentScene + "_GPS" +
-            SceneData.CurrentWaypoint.ToString();
+        string gpsFile = DialogueSceneData.CurrentScene + "_GPS" +
+            DialogueSceneData.CurrentWaypoint.ToString();
 
-        TextAsset file = Resources.Load(gpsFile) as TextAsset;
+        TextAsset file = Resources.Load(gpsFile) as TextAsset; // load from resources folder
 
         if (file != null)
         {
+            // split into array and set values
             string[] fullLines = file.text.Split(new char[] { '\n' });
 
             if (fullLines[1].Length > 0 && !fullLines[1].Contains("//"))
@@ -273,6 +280,7 @@ public class GPSManager : MonoBehaviour
         }
     }
 
+    // get & set methods for member variables
     public float Latitude
     {
         get

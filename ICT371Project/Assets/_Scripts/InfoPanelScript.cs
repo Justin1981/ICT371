@@ -20,9 +20,6 @@ public class InfoPanelScript : MonoBehaviour {
 	// Use this for initialization
 	void Start () 
     {
-        //infoCanvas = infoCanvas.GetComponent<Canvas>();
-        //infoCanvas.enabled = false;
-
         okBtn = okBtn.GetComponent<Button>();
 
         startPanelDisabled = false;
@@ -31,22 +28,18 @@ public class InfoPanelScript : MonoBehaviour {
 	// Turn info panel off
     public void InfoPanelOff()
     {
-        //infoCanvas.enabled = false;
         infoCanvas.SetActive(false);
     }
 
+    // set panel off
     public void StartPanelDisabled()
     {
         startPanelDisabled = true;
     }
 
+    // on mouse down set canvas active
     void OnMouseDown()
     {
-        //Debug.Log("OnMouseDown Called");
-        //if (!infoCanvas.enabled)
-        //{
-        //    infoCanvas.enabled = true;
-        //}
         if (!infoCanvas.activeSelf && startPanelDisabled)
         {
             infoCanvas.SetActive(true);

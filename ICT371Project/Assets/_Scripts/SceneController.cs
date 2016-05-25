@@ -4,8 +4,12 @@ using System.Collections;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
+/// <summary>
+/// Script to control scene data on exercise levels
+/// </summary>
 public class SceneController : MonoBehaviour
 {
+    // public variables
     public GameObject mapCanvas;
     public GameObject imgTrgtCanvas;
     public GameObject infoCanvas;
@@ -13,30 +17,31 @@ public class SceneController : MonoBehaviour
     public GameObject directionArrow;
 
     public Text distanceText;
+    // debugging
+    public Text testText;
 
+    // private members
     private GPSManager m_gps;
     private QuestionManager m_questionManager;
     private string m_curDirection;
     
-    public Text testText;
 
     // Use this for initialization
     void Start()
     {
+        // initialise variables
         mapCanvas.SetActive(true);
         imgTrgtCanvas.SetActive(false);
         infoCanvas.SetActive(false);
         imgTrgtBtn.SetActive(false);
         distanceText.text = "Please wait while the GPS finds your location";
         directionArrow.SetActive(false);
+        
+        // set static data values used in other scenes
+        DialogueSceneData.CurrentScene = SceneManager.GetActiveScene().name;
+        DialogueSceneData.CurrentWaypoint++;
 
-
-        SceneData.CurrentScene = SceneManager.GetActiveScene().name;
-        //if(SceneData.CurrentWaypoint == 0)
-        //    SceneData.CurrentWaypoint = 1;
-        //else
-            SceneData.CurrentWaypoint++;
-
+        // start GPS
         m_gps = GetComponent<GPSManager>();
         if (!m_gps.LoadData())
             Debug.Log("Error Loading GPS file");
@@ -45,9 +50,7 @@ public class SceneController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        //directionArrow.SetActive(true);
-        //UpdateColour();
-
+        // once GPS active manage onscreen data
         if (m_gps.GPSonline)
         {
             UpdateOutput();
@@ -85,13 +88,12 @@ public class SceneController : MonoBehaviour
         //curHeadingText.text = "Cur Heading: " + gps.CurHeading.ToString();
         //directToTargetText.text = "Direction: " + gps.DirectToTarget;
     }
-
+    // direct user to target via direction arrow
     void DirectToTarget()
     {
         string direction = m_gps.DirectToTarget;
         float forward = m_gps.Bearing;
         float current = m_gps.CurHeading;
-
 
         float newDirection = forward - current;
 
@@ -108,6 +110,7 @@ public class SceneController : MonoBehaviour
         testText.text = "Direction: " + direction;
     }
 
+    // update arrow colour
     void UpdateColour()
     {
         float mixAmount = 1-(m_gps.DistanceToTarget - 10)/(float)(200 - 10);
@@ -124,6 +127,7 @@ public class SceneController : MonoBehaviour
         directionArrow.GetComponent<Renderer>().material.SetColor("_Color", arrowColour);
     }
 
+    // set panel on
     public void PanelOn(GameObject panel)
     {
         PanelOff();
@@ -131,6 +135,7 @@ public class SceneController : MonoBehaviour
         panel.SetActive(true);
     }
 
+    // set all panels off
     public void PanelOff()
     {
         mapCanvas.SetActive(false);
@@ -138,6 +143,7 @@ public class SceneController : MonoBehaviour
         infoCanvas.SetActive(false);
     }
 
+    // set info panel on
     public void InfoPanelOn()
     {
         PanelOff();

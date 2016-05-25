@@ -11,7 +11,6 @@ public class LoadAdditive : MonoBehaviour
 
     public void LoadAddOnClick(int level)
     {
-        //Application.LoadLevelAdditive(level);
         SceneManager.LoadScene(level, LoadSceneMode.Additive);
     }
 }
