@@ -3,6 +3,7 @@ using System.Collections;
 
 public static class SceneData
 {
+    // Max waypoints for each level
     public const int MAX_WAYPOINTS = 4;
 
     // Current scene name - used for Dialogue Scene
@@ -12,6 +13,10 @@ public static class SceneData
     // Current selected animal and stage - used for reporting
     private static string m_selectedAnimal;
     private static string m_selectedLevel;
+
+    // Total question asked and answered - used for reporting
+    private static int m_questionsTotal;
+    private static int m_questionsCorrect;
 
     public static string CurrentScene
     {
@@ -69,6 +74,30 @@ public static class SceneData
                 return "ERROR";
             else
                 return m_selectedLevel;
+        }
+    }
+
+    public static int QuestionsTotal
+    {
+        set
+        {
+            m_questionsTotal = value;
+        }
+        get
+        {
+            return m_questionsTotal;
+        }
+    }
+
+    public static int QuestionsCorrect
+    {
+        set
+        {
+            m_questionsCorrect = value;
+        }
+        get
+        {
+            return m_questionsCorrect;
         }
     }
 }

@@ -162,11 +162,14 @@ public class QuestionManager : MonoBehaviour
         }
         else
         {
-            //Finish and display next goal.
-            if(SceneData.CurrentWaypoint < SceneData.MAX_WAYPOINTS)
+            //Finish and display next goal. Set Answer details for reporting
+            if (SceneData.CurrentWaypoint < SceneData.MAX_WAYPOINTS)
                 endOfQuizCanvas.SetActive(true);
             else
                 endOfLevelCanvas.SetActive(true);
+            
+            SceneData.QuestionsTotal += questionsAnswered;
+            SceneData.QuestionsCorrect += correctAnswers;
         }
     }
 
@@ -248,7 +251,7 @@ public class QuestionManager : MonoBehaviour
         //if (qNaFile == "ERROR")
             //qNaFile = "CockatooLCBirthScreen_QnA";
 
-        testText.text += qNaFile;
+        testText.text = qNaFile;
 
         Debug.Log("qNaFile: " + qNaFile);
 

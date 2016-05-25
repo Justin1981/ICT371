@@ -11,14 +11,10 @@ public class SetReportData : MonoBehaviour
     void Start()
     {
         SceneData.CurrentWaypoint = 0;
+        SceneData.QuestionsCorrect = 0;
+        SceneData.QuestionsTotal = 0;
     }
-
-    // Update is called once per frame
-    void Update()
-    {
-
-    }
-
+    
     public void SetCurrentAnimal(Button button)
     {
         SceneData.SelectedAnimal = button.GetComponentInChildren<Text>().text;
